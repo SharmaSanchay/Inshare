@@ -1,13 +1,11 @@
 const dropZone = document.querySelector(".drop-zone");
 const fileInput = document.querySelector("#fileInput");
 const browseBtn = document.querySelector("#browseBtn");
-
 const bgProgress = document.querySelector(".bg-progress");
 const progressPercent = document.querySelector("#progressPercent");
 const progressContainer = document.querySelector(".progress-container");
 const progressBar = document.querySelector(".progress-bar");
 const status = document.querySelector(".status");
-
 const sharingContainer = document.querySelector(".sharing-container");
 const copyURLBtn = document.querySelector("#copyURLBtn");
 const fileURL = document.querySelector("#fileURL");
@@ -17,98 +15,97 @@ const toast = document.querySelector(".toast");
 const baseURL = "https://inshare-1-o9b6.onrender.com";
 const uploadURL = `${baseURL}/api/files`;
 const emailURL = `${baseURL}/api/files/send`;
+const maxAllowedSize = 100 * 1024 * 1024; // 100MB
 
-const maxAllowedSize = 100 * 1024 * 1024; //100MB
+const init = () => {
+    attachEventListeners();
+};
 
-browseBtn.addEventListener("click", () => {
-    fileInput.click();
-});
+const attachEventListeners = () => {
+    browseBtn.addEventListener("click", () => fileInput.click());
+    dropZone.addEventListener("drop", handleFileDrop);
+    dropZone.addEventListener("dragover", (e) => e.preventDefault());
+    dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragged"));
+    fileInput.addEventListener("change", handleFileInputChange);
+    copyURLBtn.addEventListener("click", copyToClipboard);
+    fileURL.addEventListener("click", () => fileURL.select());
+    emailForm.addEventListener("submit", handleEmailFormSubmit);
+};
 
-dropZone.addEventListener("drop", (e) => {
+const handleFileDrop = (e) => {
     e.preventDefault();
     const files = e.dataTransfer.files;
     if (files.length === 1) {
-        if (files[0].size < maxAllowedSize) {
-            fileInput.files = files;
-            uploadFile();
-        } else {
-            showToast("Max file size is 100MB");
-        }
-    } else if (files.length > 1) {
-        showToast("You can't upload multiple files");
+        validateAndUploadFile(files[0]);
+    } else {
+        showToast(files.length > 1 ? "You can't upload multiple files" : "");
     }
     dropZone.classList.remove("dragged");
-});
+};
 
-dropZone.addEventListener("dragover", (e) => {
-    e.preventDefault();
-    dropZone.classList.add("dragged");
-});
+const handleFileInputChange = () => {
+    const file = fileInput.files[0];
+    if (file) {
+        validateAndUploadFile(file);
+    }
+};
 
-dropZone.addEventListener("dragleave", (e) => {
-    dropZone.classList.remove("dragged");
-});
-
-fileInput.addEventListener("change", () => {
-    if (fileInput.files[0].size > maxAllowedSize) {
+const validateAndUploadFile = (file) => {
+    if (file.size > maxAllowedSize) {
         showToast("Max file size is 100MB");
         fileInput.value = ""; // reset the input
         return;
     }
-    // uploadFile();
-});
+    uploadFile(file);
+};
 
-copyURLBtn.addEventListener("click", () => {
+const copyToClipboard = () => {
     fileURL.select();
     document.execCommand("copy");
     showToast("Copied to clipboard");
-});
+};
 
-fileURL.addEventListener("click", () => {
-    fileURL.select();
-});
-/* const uploadFile = () => {
-    const files = fileInput.files;
+const uploadFile = (file) => {
     const formData = new FormData();
-    formData.append("myfile", files[0]);
+    formData.append("myfile", file);
 
     // Show progress container
     progressContainer.style.display = "block";
 
     const xhr = new XMLHttpRequest();
-    xhr.upload.onprogress = function (event) {
-        // Calculate and display the upload percentage
-        let percent = Math.round((100 * event.loaded) / event.total);
-        progressPercent.innerText = percent;
-        const scaleX = `scaleX(${percent / 100})`;
-        bgProgress.style.transform = scaleX;
-        progressBar.style.transform = scaleX;
-    };
-
-    xhr.upload.onerror = function () {
-        // Log error and show error message
-        console.error(`Upload error: ${xhr.status}.`);
-        showToast(`Error in upload: ${xhr.status}.`);
-        fileInput.value = ""; // reset the input
-    };
-
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState === XMLHttpRequest.DONE) {
-            if (xhr.status === 200) {
-                // Handle successful upload
-                onFileUploadSuccess(xhr.responseText);
-            } else {
-                // Log detailed error messages
-                console.error('Failed to upload file.', xhr.status, xhr.statusText, xhr.responseText);
-                showToast('Failed to upload file.');
-            }
-        }
-    };
+    xhr.upload.onprogress = (event) => updateProgress(event);
+    xhr.upload.onerror = () => handleUploadError(xhr);
+    xhr.onreadystatechange = () => handleUploadResponse(xhr);
 
     // Send the request
     xhr.open("POST", uploadURL);
     xhr.send(formData);
-}; */
+};
+
+const updateProgress = (event) => {
+    const percent = Math.round((100 * event.loaded) / event.total);
+    progressPercent.innerText = percent;
+    const scaleX = `scaleX(${percent / 100})`;
+    bgProgress.style.transform = scaleX;
+    progressBar.style.transform = scaleX;
+};
+
+const handleUploadError = (xhr) => {
+    console.error(`Upload error: ${xhr.status}.`);
+    showToast(`Error in upload: ${xhr.status}.`);
+    fileInput.value = ""; // reset the input
+};
+
+const handleUploadResponse = (xhr) => {
+    if (xhr.readyState === XMLHttpRequest.DONE) {
+        if (xhr.status === 200) {
+            onFileUploadSuccess(xhr.responseText);
+        } else {
+            console.error('Failed to upload file.', xhr.status, xhr.statusText, xhr.responseText);
+            showToast('Failed to upload file.');
+        }
+    }
+};
 
 const onFileUploadSuccess = (res) => {
     fileInput.value = ""; // reset the input
@@ -126,22 +123,30 @@ const onFileUploadSuccess = (res) => {
     }
 };
 
-emailForm.addEventListener("submit", (e) => {
+const handleEmailFormSubmit = (e) => {
     e.preventDefault();
-    emailForm[2].setAttribute("disabled", "true");
-    emailForm[2].innerText = "Sending";
+    const submitButton = emailForm[2];
+    submitButton.setAttribute("disabled", "true");
+    submitButton.innerText = "Sending";
+
     const url = fileURL.value;
-    const formData = {
-        uuid: url.split("/").splice(-1, 1)[0],
+    const uuid = url.split("/").pop();
+    const emailData = {
+        uuid: uuid,
         emailTo: emailForm.elements["to-email"].value,
         emailFrom: emailForm.elements["from-email"].value,
     };
+
+    sendEmail(emailData, submitButton);
+};
+
+const sendEmail = (emailData, submitButton) => {
     fetch(emailURL, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(emailData),
     })
         .then((res) => res.json())
         .then((data) => {
@@ -149,11 +154,14 @@ emailForm.addEventListener("submit", (e) => {
                 showToast("Email Sent");
                 sharingContainer.style.display = "none"; // hide the box
             }
+        })
+        .finally(() => {
+            submitButton.removeAttribute("disabled");
+            submitButton.innerText = "Send"; // reset button
         });
-});
+};
 
 let toastTimer;
-// the toast function
 const showToast = (msg) => {
     clearTimeout(toastTimer);
     toast.innerText = msg;
@@ -162,3 +170,6 @@ const showToast = (msg) => {
         toast.classList.remove("show");
     }, 2000);
 };
+
+// Initialize event listeners
+init();
