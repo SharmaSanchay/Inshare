@@ -99,7 +99,7 @@ const uploadFile = () => {
                 onFileUploadSuccess(xhr.responseText);
             } else {
                 // Log error details and show error message
-                console.error('Failed to upload file.', xhr.status, xhr.statusText);
+                // console.error('Failed to upload file.', xhr.status, xhr.statusText);
                 showToast('Failed to upload file.');
             }
         }
