@@ -67,14 +67,17 @@ copyURLBtn.addEventListener("click", () => {
 fileURL.addEventListener("click", () => {
     fileURL.select();
 });
-
 const uploadFile = () => {
     const files = fileInput.files;
     const formData = new FormData();
     formData.append("myfile", files[0]);
+
+    // Show progress container
     progressContainer.style.display = "block";
+
     const xhr = new XMLHttpRequest();
     xhr.upload.onprogress = function (event) {
+        // Calculate and display the upload percentage
         let percent = Math.round((100 * event.loaded) / event.total);
         progressPercent.innerText = percent;
         const scaleX = `scaleX(${percent / 100})`;
@@ -83,18 +86,26 @@ const uploadFile = () => {
     };
 
     xhr.upload.onerror = function () {
+        // Log error and show error message
+        console.error(`Upload error: ${xhr.status}.`);
         showToast(`Error in upload: ${xhr.status}.`);
         fileInput.value = ""; // reset the input
     };
+
     xhr.onreadystatechange = function () {
         if (xhr.readyState === XMLHttpRequest.DONE) {
             if (xhr.status === 200) {
+                // Handle successful upload
                 onFileUploadSuccess(xhr.responseText);
             } else {
+                // Log error details and show error message
+                console.error('Failed to upload file.', xhr.status, xhr.statusText);
                 showToast('Failed to upload file.');
             }
         }
     };
+
+    // Send the request
     xhr.open("POST", uploadURL);
     xhr.send(formData);
 };
