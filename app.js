@@ -4,7 +4,12 @@ const path = require('path');
 const cors = require('cors');
 const connectDB = require('./config/db');
 const PORT = process.env.PORT || 3000;
-app.use(cors());
+app.use(cors({
+    origin: 'https://inshare-1-o9b6.onrender.com',
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+}));
 // Set view engine
 app.set('view engine', 'ejs');
 
