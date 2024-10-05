@@ -55,7 +55,7 @@ fileInput.addEventListener("change", () => {
         fileInput.value = ""; // reset the input
         return;
     }
-    uploadFile();
+    // uploadFile();
 });
 
 copyURLBtn.addEventListener("click", () => {
@@ -67,7 +67,7 @@ copyURLBtn.addEventListener("click", () => {
 fileURL.addEventListener("click", () => {
     fileURL.select();
 });
-const uploadFile = () => {
+/* const uploadFile = () => {
     const files = fileInput.files;
     const formData = new FormData();
     formData.append("myfile", files[0]);
@@ -108,7 +108,7 @@ const uploadFile = () => {
     // Send the request
     xhr.open("POST", uploadURL);
     xhr.send(formData);
-};
+}; */
 
 const onFileUploadSuccess = (res) => {
     fileInput.value = ""; // reset the input
