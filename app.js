@@ -5,7 +5,7 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const PORT = process.env.PORT || 3000;
 app.use(cors({
-    origin: 'https://inshare-1-o9b6.onrender.com',
+    origin: '*',
     methods: ['GET', 'POST'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true

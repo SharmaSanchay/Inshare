@@ -12,9 +12,8 @@ const fileURL = document.querySelector("#fileURL");
 const emailForm = document.querySelector("#emailForm");
 const toast = document.querySelector(".toast");
 
-const baseURL = "https://inshare-1-o9b6.onrender.com";
-const uploadURL = `${baseURL}/api/files`;
-const emailURL = `${baseURL}/api/files/send`;
+const uploadURL = `/api/files`;
+const emailURL = `/api/files/send`;
 const maxAllowedSize = 100 * 1024 * 1024; // 100MB
 
 const init = () => {
